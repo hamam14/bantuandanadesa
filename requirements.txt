@@ -1,4 +1,4 @@
+joblib
 numpy
 streamlit
 pandas
-pip install joblib
