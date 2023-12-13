@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import MinMaxScaler
+import joblib
 
 # Load the data
 @st.cache
@@ -11,16 +10,27 @@ def load_data():
 
 df = load_data()
 
-# Preprocess the data
-fitur = ['ANGGOTA KELUARGA', 'JUMLAH PENGELUARAN per BULAN ( RP )', 'JUMLAH PENDAPATAN SEBULAN ( RP)', 'LUAS ASET LAHAN YANG DIMILIKI ( M2)', 'LUAS RUMAH TINGGAL (M2)']
-scaler = MinMaxScaler()
-df[fitur] = scaler.fit_transform(df[fitur])
+# Manual MinMaxScaler
+def manual_minmax_scaling(data, min_val, max_val):
+    return (data - min_val) / (max_val - min_val)
+
+# Define min and max values for each feature for manual scaling
+min_max_values = {
+    'ANGGOTA KELUARGA': (df['ANGGOTA KELUARGA'].min(), df['ANGGOTA KELUARGA'].max()),
+    'JUMLAH PENGELUARAN per BULAN ( RP )': (df['JUMLAH PENGELUARAN per BULAN ( RP )'].min(), df['JUMLAH PENGELUARAN per BULAN ( RP )'].max()),
+    'JUMLAH PENDAPATAN SEBULAN ( RP)': (df['JUMLAH PENDAPATAN SEBULAN ( RP)'].min(), df['JUMLAH PENDAPATAN SEBULAN ( RP)'].max()),
+    'LUAS ASET LAHAN YANG DIMILIKI ( M2)': (df['LUAS ASET LAHAN YANG DIMILIKI ( M2)'].min(), df['LUAS ASET LAHAN YANG DIMILIKI ( M2)'].max()),
+    'LUAS RUMAH TINGGAL (M2)': (df['LUAS RUMAH TINGGAL (M2)'].min(), df['LUAS RUMAH TINGGAL (M2)'].max())
+}
 
 # Model training
 X = df[['ANGGOTA KELUARGA', 'JUMLAH PENGELUARAN per BULAN ( RP )', 'JUMLAH PENDAPATAN SEBULAN ( RP)', 'LUAS ASET LAHAN YANG DIMILIKI ( M2)', 'LUAS RUMAH TINGGAL (M2)']]
 y = df['MENERIMA BANTUAN ']
 model = KNeighborsClassifier(n_neighbors=10)
 model.fit(X, y)
+
+# Save the KNN model
+joblib.dump(model, 'knn_model.joblib')
 
 # Streamlit app
 st.title('Prediction of Aid Recipient')
@@ -32,10 +42,16 @@ pendapatan_sebulan = st.number_input('Jumlah Pendapatan per Bulan (RP)', min_val
 luas_aset = st.number_input('Luas Aset Lahan yang Dimiliki (M2)', min_value=0)
 luas_rumah = st.number_input('Luas Rumah Tinggal (M2)', min_value=0)
 
-# Predict function
+# Predict function using manual scaling
 def predict():
-    input_data = scaler.transform([[anggota_keluarga, pengeluaran_per_bulan, pendapatan_sebulan, luas_aset, luas_rumah]])
-    prediction = model.predict(input_data)
+    scaled_input = [
+        manual_minmax_scaling(anggota_keluarga, *min_max_values['ANGGOTA KELUARGA']),
+        manual_minmax_scaling(pengeluaran_per_bulan, *min_max_values['JUMLAH PENGELUARAN per BULAN ( RP )']),
+        manual_minmax_scaling(pendapatan_sebulan, *min_max_values['JUMLAH PENDAPATAN SEBULAN ( RP)']),
+        manual_minmax_scaling(luas_aset, *min_max_values['LUAS ASET LAHAN YANG DIMILIKI ( M2)']),
+        manual_minmax_scaling(luas_rumah, *min_max_values['LUAS RUMAH TINGGAL (M2)'])
+    ]
+    prediction = model.predict([scaled_input])
     return prediction[0]
 
 if st.button('Predict'):
