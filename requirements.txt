@@ -1,4 +1,4 @@
-joblib
+pickle
 numpy
 streamlit
 pandas
