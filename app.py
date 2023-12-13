@@ -23,9 +23,10 @@ min_max_values = {
     'LUAS RUMAH TINGGAL (M2)': (df['LUAS RUMAH TINGGAL (M2)'].min(), df['LUAS RUMAH TINGGAL (M2)'].max())
 }
 
-# Load the trained model
+# Load the trained model using pickle
 with open('knn_model.pkl', 'rb') as file:
     model = pickle.load(file)
+
 
 # Streamlit app
 st.title('Prediction of Aid Recipient')
