@@ -30,7 +30,7 @@ model = KNeighborsClassifier(n_neighbors=10)
 model.fit(X, y)
 
 # Save the KNN model
-joblib.dump(model, 'knn_model.joblib')
+joblib.dump(model, 'knn_model.pkl')
 
 # Streamlit app
 st.title('Prediction of Aid Recipient')
